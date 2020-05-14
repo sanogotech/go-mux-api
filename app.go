@@ -6,7 +6,7 @@ import (
 	"database/sql"
 
     // tom: for Initialize
-    "fmt"
+    //"fmt"
     "log"
 
     // tom: for route handlers
@@ -30,11 +30,13 @@ type App struct {
 
 // tom: added "sslmode=disable" to connection string
 func (a *App) Initialize(user, password, dbname string) {
-	connectionString :=
-		fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable", user, password, dbname)
+	//connectionString := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable", user, password, dbname)
+	//connectionString ="postgres://username:password@localhost/db_name?sslmode=disable"
 
 	var err error
-	a.DB, err = sql.Open("postgres", connectionString)
+	//a.DB, err = sql.Open("postgres", connectionString)
+	a.DB, err = sql.Open("postgres", "user=postgres password=postgres dbname=mygodb sslmode=disable")
+
 	if err != nil {
 		log.Fatal(err)
 	}
