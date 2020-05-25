@@ -6,7 +6,7 @@ import (
 	"database/sql"
 
     // tom: for Initialize
-    //"fmt"
+    "fmt"
     "log"
 
     // tom: for route handlers
@@ -18,6 +18,12 @@ import (
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
 
+	//For Mongodb
+	"context"
+	//"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+
 )
 
 type App struct {
@@ -25,8 +31,38 @@ type App struct {
 	DB     *sql.DB
 }
 
+// DATABASE INSTANCE
+var collection *mongo.Collection
+
 // tom: initial function is empty, it's filled afterwards
 // func (a *App) Initialize(user, password, dbname string) { }
+
+func (a *App) InitializeMongoDB() {
+
+		// Set client options
+	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
+
+	var errmongo error
+	// Connect to MongoDB
+	client, errmongo  := mongo.Connect(context.TODO(), clientOptions)
+	if errmongo != nil {
+		log.Fatal(errmongo)
+	}
+
+	// Check the connection
+	errmongo  = client.Ping(context.TODO(), nil)
+	if errmongo != nil {
+		log.Fatal(errmongo)
+	}
+
+	fmt.Println("Connected to MongoDB!")
+
+	// Get a handle for your collection
+	collection = client.Database("learndb").Collection("trainers")
+
+
+}
+
 
 // tom: added "sslmode=disable" to connection string
 func (a *App) Initialize(user, password, dbname string) {
@@ -51,7 +87,7 @@ func (a *App) Initialize(user, password, dbname string) {
 // func (a *App) Run(addr string) { }
 // improved version
 func (a *App) Run(addr string) {
-	log.Fatal(http.ListenAndServe(":8010", a.Router))
+	log.Fatal(http.ListenAndServe(":8090", a.Router))
 }
 
 // tom: these are added later
@@ -108,6 +144,10 @@ func (a *App) getProducts(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondWithJSON(w, http.StatusOK, products)
+}
+
+func homeLink(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "Welcome home Port 8090!")
 }
 
 func (a *App) createProduct(w http.ResponseWriter, r *http.Request) {
@@ -169,8 +209,25 @@ func (a *App) deleteProduct(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, map[string]string{"result": "success"})
 }
 
+//Mongo  REST API
+
+func (a *App) getTrainer(w http.ResponseWriter, r *http.Request) {
+	
+	var mytrainer Trainer
+	resultmongo ,err := mytrainer.getTrainer(collection)
+
+	if  err != nil {
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	//return  resultmongo
+	//fmt.Fprintf(w, resultmongo)
+	respondWithJSON(w, http.StatusOK, resultmongo)
+}	
 
 func (a *App) initializeRoutes() {
+	a.Router.HandleFunc("/trainermongo", a.getTrainer).Methods("GET")
+	a.Router.HandleFunc("/hello", homeLink)
 	a.Router.HandleFunc("/products", a.getProducts).Methods("GET")
 	a.Router.HandleFunc("/product", a.createProduct).Methods("POST")
 	a.Router.HandleFunc("/product/{id:[0-9]+}", a.getProduct).Methods("GET")

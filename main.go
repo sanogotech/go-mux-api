@@ -11,5 +11,7 @@ func main() {
 		os.Getenv("APP_DB_PASSWORD"),
 		os.Getenv("APP_DB_NAME"))
 
+	a.InitializeMongoDB()
+
 	a.Run(":8010")
 }
