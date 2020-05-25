@@ -3,7 +3,7 @@ package main
 
 import (
 	"context"
-	"fmt"
+	//"fmt"
 	 "log"
 
 	 "go.mongodb.org/mongo-driver/bson"
@@ -38,7 +38,7 @@ func (mytrainer *Trainer) getTrainer(collection *mongo.Collection) (Trainer,erro
 		return  result, errmongo
 	}
 
-	fmt.Printf("Found a single document: %+v\n", result)
+	//fmt.Printf("Found a single document: %+v\n", result)
 
 	return result,nil
 }
